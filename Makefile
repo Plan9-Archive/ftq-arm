@@ -1,6 +1,6 @@
 CC = cc
 # Note the -O0. You should *never* optimize this benchmark!
-CFLAGS = -Wall -O0
+CFLAGS = -Wall -O0 -DARM -DARM_PMU
 LIBS =
 LDFLAGS = $(USER_OPT)
 

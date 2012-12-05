@@ -418,3 +418,37 @@ INLINE_ELAPSED(inline)
 #define HAVE_TICK_COUNTER
 #endif
 
+#if defined(ARM_PMU)
+/*
+ * Internal macros for acessing PM registers
+ * PMU access has to be enabled from supervisor mode
+ * (in other words from a kernel driver)
+ *
+ */
+
+#define READ_REG(reg,v)  asm volatile("mrc " reg : "=r"(v))
+#define WRITE_REG(reg,v) asm volatile("mcr " reg : : "r"(v))
+
+#define PMCCNTR    "p15, 0, %0, c9, c13, 0"
+#define PMOVSR     "p15, 0, %0, c9, c12, 3"
+
+typedef unsigned long long ticks;
+static __inline__ ticks getticks(void)
+{
+       unsigned v;
+       unsigned ov;
+       static unsigned long long base = 0;
+       READ_REG(PMCCNTR,v);
+       READ_REG(PMOVSR,ov);
+       if(ov) {
+               WRITE_REG(PMOVSR,0x80000000); // clear overflow bit 
+               base = base + ((long long)1<<32);
+       }       
+       return (base | v);
+}
+
+INLINE_ELAPSED(__inline__)
+
+#define HAVE_TICK_COUNTER
+#endif /* ARM_PMU */
+
